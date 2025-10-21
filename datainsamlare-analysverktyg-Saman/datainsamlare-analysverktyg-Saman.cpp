@@ -16,6 +16,11 @@ double calculateMean(const vector<double>& values);
 double calculateVariance(const vector<double>& values);
 double calculateStandardDeviation(const vector<double>& values);
 
+struct Temperature {
+    double temperature;
+    string timestamp;
+};
+
 int main() {
     vector<double> values; // Stores all measurement values
     int choice;
