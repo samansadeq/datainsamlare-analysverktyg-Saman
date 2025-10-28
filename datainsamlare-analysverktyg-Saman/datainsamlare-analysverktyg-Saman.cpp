@@ -1,12 +1,12 @@
-#include <iostream>     // For input and output
-#include <vector>       // To store the list of values
-#include <algorithm>    // For sorting and min/max
-#include <cmath>        // For sqrt() in standard deviation
-#include <limits>       // For input validation
-
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include "data_manager.h"
 using namespace std;
 
-// Function declarations
+// === Project functions ===
 void addValues(vector<double>& values);
 void showStatistics(const vector<double>& values);
 void searchValue(const vector<double>& values);
@@ -16,175 +16,193 @@ double calculateMean(const vector<double>& values);
 double calculateVariance(const vector<double>& values);
 double calculateStandardDeviation(const vector<double>& values);
 
-struct Temperature {
-    double temperature;
-    string timestamp;
-};
-
+// === MAIN PROGRAM ===
 int main() {
-    vector<double> values; // Stores all measurement values
-    int choice;
+    vector<double> values;
+    DataManager manager;
+    int mainChoice;
+
+    // Load previous data for new project
+    manager.loadFromFile("data.csv");
 
     do {
-        // === MENU INTERFACE ===
-        cout << "\n===== MeasurementApp =====\n";
-        cout << "1. Add new measurement values\n";
-        cout << "2. Show statistics\n";
-        cout << "3. Search for a value\n";
-        cout << "4. Sort the list (ascending/descending)\n";
-        cout << "5. Exit\n";
-        cout << "Choose an option (1-5): ";
+        cout << "\n===== MAIN MENU =====\n";
+        cout << "1. Use Basic MeasurementApp (old project)\n";
+        cout << "2. Use Advanced DataManager (new project)\n";
+        cout << "3. Exit\n";
+        cout << "Choose an option (1-3): ";
 
-        cin >> choice;
+        cin >> mainChoice;
 
-        // Handle invalid input (letters instead of numbers)
         if (cin.fail()) {
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << "Invalid input! Please enter a number.\n";
+            cout << "Invalid input. Please enter a number.\n";
             continue;
         }
 
-        // === MENU OPTIONS ===
-        switch (choice) {
-        case 1:
-            addValues(values);
-            break;
-        case 2:
-            showStatistics(values);
-            break;
-        case 3:
-            searchValue(values);
-            break;
-        case 4:
-            sortValues(values);
-            break;
-        case 5:
-            cout << "Program ended. Goodbye!\n";
-            break;
-        default:
-            cout << "Invalid choice! Please enter 1–5.\n";
+        // === BASIC MENU ===
+        if (mainChoice == 1) {
+            int choice;
+            do {
+                cout << "\n===== Basic MeasurementApp =====\n";
+                cout << "1. Add new measurement values\n";
+                cout << "2. Show statistics\n";
+                cout << "3. Search for a value\n";
+                cout << "4. Sort values\n";
+                cout << "5. Back to main menu\n";
+                cout << "Choose (1-5): ";
+                cin >> choice;
+
+                if (cin.fail()) {
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    cout << "Invalid input.\n";
+                    continue;
+                }
+
+                switch (choice) {
+                case 1: addValues(values); break;
+                case 2: showStatistics(values); break;
+                case 3: searchValue(values); break;
+                case 4: sortValues(values); break;
+                case 5: break;
+                default: cout << "Invalid choice!\n";
+                }
+            } while (choice != 5);
         }
 
-    } while (choice != 5);
+        // === ADVANCED MENU ===
+        else if (mainChoice == 2) {
+            int choice;
+            do {
+                cout << "\n===== Advanced DataManager =====\n";
+                cout << "1. Add measurement\n";
+                cout << "2. Show all data\n";
+                cout << "3. Show statistics\n";
+                cout << "4. Save to file\n";
+                cout << "5. Back to main menu\n";
+                cout << "Choose (1-5): ";
+                cin >> choice;
+
+                if (cin.fail()) {
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    cout << "Invalid input.\n";
+                    continue;
+                }
+
+                switch (choice) {
+                case 1: {
+                    float val;
+                    string time;
+                    cout << "Enter value: ";
+                    cin >> val;
+                    cout << "Enter timestamp (e.g. 2025-10-27 09:00): ";
+                    cin.ignore();
+                    getline(cin, time);
+                    manager.addMeasurement(val, time);
+                    break;
+                }
+                case 2:
+                    manager.printData();
+                    break;
+                case 3:
+                    cout << "\nAverage: " << manager.calculateAverage();
+                    cout << "\nMin: " << manager.findMin();
+                    cout << "\nMax: " << manager.findMax();
+                    cout << "\nStd Dev: " << manager.calculateStdDev() << endl;
+                    break;
+                case 4:
+                    manager.saveToFile("data.csv");
+                    break;
+                case 5:
+                    break;
+                default:
+                    cout << "Invalid choice.\n";
+                }
+            } while (choice != 5);
+        }
+
+        else if (mainChoice == 3) {
+            cout << "Program ended. Goodbye!\n";
+            manager.saveToFile("data.csv"); // save automatically
+        }
+
+    } while (mainChoice != 3);
 
     return 0;
 }
 
-// === 1. Add new values ===
+// === FUNCTIONS ===
 void addValues(vector<double>& values) {
-    double number;
-    char more;
-
+    double number; char more;
     do {
-        cout << "Enter a value (integer or decimal): ";
+        cout << "Enter a value: ";
         cin >> number;
-
         if (cin.fail()) {
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << "Invalid input! Please enter a number.\n";
+            cout << "Invalid input!\n";
         }
-        else {
-            values.push_back(number);
-        }
-
-        cout << "Add another value? (y/n): ";
+        else values.push_back(number);
+        cout << "Add another? (y/n): ";
         cin >> more;
-
     } while (more == 'y' || more == 'Y');
 }
 
-// === 2. Show statistics ===
 void showStatistics(const vector<double>& values) {
     if (values.empty()) {
-        cout << "No values! Please add some first.\n";
-        return;
+        cout << "No values.\n"; return;
     }
-
-    cout << "\n===== Statistics =====\n";
-    cout << "Count: " << values.size() << endl;
-    cout << "Sum: " << calculateSum(values) << endl;
-    cout << "Mean: " << calculateMean(values) << endl;
-    cout << "Min: " << *min_element(values.begin(), values.end()) << endl;
-    cout << "Max: " << *max_element(values.begin(), values.end()) << endl;
-    cout << "Variance: " << calculateVariance(values) << endl;
-    cout << "Standard Deviation: " << calculateStandardDeviation(values) << endl;
+    cout << "\nCount: " << values.size();
+    cout << "\nSum: " << calculateSum(values);
+    cout << "\nMean: " << calculateMean(values);
+    cout << "\nMin: " << *min_element(values.begin(), values.end());
+    cout << "\nMax: " << *max_element(values.begin(), values.end());
+    cout << "\nVariance: " << calculateVariance(values);
+    cout << "\nStandard Deviation: " << calculateStandardDeviation(values) << endl;
 }
 
-// === 3. Search for a value ===
 void searchValue(const vector<double>& values) {
-    if (values.empty()) {
-        cout << "No values to search!\n";
-        return;
-    }
-
+    if (values.empty()) { cout << "No values.\n"; return; }
     double target;
-    cout << "Enter the value to search for: ";
+    cout << "Enter value to search: ";
     cin >> target;
-
     bool found = false;
-    for (double val : values) {
-        if (val == target) {
-            found = true;
-            break;
-        }
-    }
-
-    if (found)
-        cout << "The value " << target << " was found!\n";
-    else
-        cout << "The value " << target << " was NOT found.\n";
+    for (double val : values)
+        if (val == target) { found = true; break; }
+    if (found) cout << "Value found!\n";
+    else cout << "Value not found.\n";
 }
 
-// === 4. Sort the list ===
 void sortValues(vector<double>& values) {
-    if (values.empty()) {
-        cout << "No values to sort!\n";
-        return;
-    }
-
+    if (values.empty()) { cout << "No values.\n"; return; }
     int order;
-    cout << "Sort order: 1 = Ascending, 2 = Descending: ";
+    cout << "1 = Ascending, 2 = Descending: ";
     cin >> order;
-
-    if (order == 1) {
-        sort(values.begin(), values.end());
-        cout << "Sorted ascending.\n";
-    }
-    else if (order == 2) {
-        sort(values.begin(), values.end(), greater<double>());
-        cout << "Sorted descending.\n";
-    }
-    else {
-        cout << "Invalid choice! Sorting canceled.\n";
-        return;
-    }
-
+    if (order == 1) sort(values.begin(), values.end());
+    else sort(values.begin(), values.end(), greater<double>());
     cout << "Sorted values: ";
     for (double val : values) cout << val << " ";
     cout << endl;
 }
 
-// === Helper functions ===
 double calculateSum(const vector<double>& values) {
     double sum = 0;
-    for (double val : values) sum += val;
+    for (double v : values) sum += v;
     return sum;
 }
-
 double calculateMean(const vector<double>& values) {
     return calculateSum(values) / values.size();
 }
-
 double calculateVariance(const vector<double>& values) {
     double mean = calculateMean(values);
     double variance = 0;
-    for (double val : values)
-        variance += pow(val - mean, 2);
+    for (double v : values)
+        variance += pow(v - mean, 2);
     return variance / values.size();
 }
-
 double calculateStandardDeviation(const vector<double>& values) {
     return sqrt(calculateVariance(values));
 }

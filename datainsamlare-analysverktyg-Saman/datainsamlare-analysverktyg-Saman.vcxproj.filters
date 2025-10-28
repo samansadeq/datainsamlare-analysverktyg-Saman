@@ -18,5 +18,16 @@
     <ClCompile Include="datainsamlare-analysverktyg-Saman.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="data_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="data_manager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="measurement.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
